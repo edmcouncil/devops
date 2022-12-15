@@ -267,7 +267,7 @@ node {
           // sending "/api/update"
           //	REQUIRES credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology"
           withCredentials([string(credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology", variable: 'API_KEY')]) {
-            def OntologyUpdateApiURL     = "https://spec.edmcouncil.org/${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}/api/update"
+            def OntologyUpdateApiURL     = "https://spec.industrialontologies.org/${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}/api/update"
             def OntologyUpdateApiHeaders = [[name: "X-API-Key", value: "${API_KEY}"]]
             def response = httpRequest url: OntologyUpdateApiURL, acceptType: 'APPLICATION_JSON', customHeaders: OntologyUpdateApiHeaders, httpMode: 'PUT'
             def ret = response.getStatus()
