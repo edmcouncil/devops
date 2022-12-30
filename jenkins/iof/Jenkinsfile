@@ -192,11 +192,6 @@ node {
 
     hygiene().call()
 
-    // temporary exit
-    currentBuild.result = 'SUCCESS'
-    return
-    // temporary exit - END
-
     product('ontology').call()
 
     stage('Build Derived Products') {
