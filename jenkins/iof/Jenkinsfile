@@ -211,7 +211,7 @@ node {
     // will be bad because we would lose all previously published versions
     //
     stage('Publish') {
-      node('edmc-master') {
+      node('nist-master') {
         // setting variables
         script {
 	  // Replace all slashes in a branch name with dashes so that we don't mess up the URLs for the ontologies
@@ -248,7 +248,7 @@ node {
              deleteDir()
            }
         }
-      } // end of node('edmc-master')
+      } // end of node('nist-master')
     } // end of stage "Publish"
       // FIBO-125
       stage('Ontology Viewer Update') {
