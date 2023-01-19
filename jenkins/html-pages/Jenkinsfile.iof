@@ -8,7 +8,10 @@
 //
 //
 // Jenkins requirements:
-//	* "pipeline-npm" plugin + "general" Npm config file
+//	* "nodejs" plugin + Npm config files with the following id's:
+//	  - "home"
+//	  - "general"
+//	* "pipeline-npm" plugin
 //	* nodes with labels:
 //	  - "${JOB_NAME.substring(0,JOB_NAME.lastIndexOf('/'))}-build"	:= for building
 //	  - "${JOB_NAME.substring(0,JOB_NAME.lastIndexOf('/'))}"	:= for publishing
