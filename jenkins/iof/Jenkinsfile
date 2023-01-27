@@ -17,6 +17,7 @@ import groovy.json.JsonSlurper
 String[] derivedProducts = ['datadictionary', 'vocabulary']
 
 env.ONTPUB_FAMILY='iof'
+env.ONTPUB_SPEC_HOST='spec.industrialontologies.org'
 env.URI_SPACE='https://spec.industrialontologies.org/ontology/'
 env.ONTPUB_INPUT_REPOS="${env.ONTPUB_FAMILY}"
 env.DEV_SPEC='AboutIOFDev.rdf'
