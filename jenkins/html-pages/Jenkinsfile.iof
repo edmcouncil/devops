@@ -9,7 +9,6 @@
 //
 // Jenkins requirements:
 //	* "nodejs" plugin + Npm config files with the following id's:
-//	  - "home"
 //	  - "general"
 //	* "pipeline-npm" plugin
 //	* nodes with labels:
@@ -63,35 +62,17 @@ node {
           echo "Branch is ${env.BRANCH_NAME}..."
           echo "Node is ${JOB_NAME.substring(0,JOB_NAME.lastIndexOf('/'))}-build"
           checkout scm
-          dir("home") {
-           try {
-            withNPM(npmrcConfig:"home") {
-              sh "set &>env.log"
-              echo "Performing npm ci..."
-              sh "npm --no-progress --no-color ci &>html-pages.log"
-              echo "Performing npm build..."
-              sh "env DISABLE_ESLINT_PLUGIN=true npm --no-progress --no-color run build &>>html-pages.log"
-              sh "mv -f env.log html-pages.log ../general/"
-            }
-           } catch (e) {
-             currentBuild.result = "FAILURE"
-             echo "Failed the \"${STAGE_NAME}\" stage: ${e}"
-             archiveArtifacts artifacts: "env.log, html-pages.log", allowEmptyArchive: true
-             throw e
-           }
-          }
+          sh "rm -f env.log html-pages.log"
           dir("general") {
            try {
             withNPM(npmrcConfig:"general") {
-              sh "set &>>env.log"
+              sh "set &>env.log"
               echo "Performing npm ci..."
-              sh "npm --no-progress --no-color ci &>>html-pages.log"
+              sh "npm --no-progress --no-color ci &>html-pages.log"
               echo "Performing npm run generate for iof"
               sh "env NODE_ENV=production ONTPUB_FAMILY=iof RESOURCES_BASE_URL=/iof/ontology/ STRAPI_URL=http://nist-jenkins:1334 STRAPI_RESOURCES_URL=/iof npm --no-progress --no-color run generate &>>html-pages.log && mv dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/iof/pages/${BRANCH}/${TAG}/_nuxt"
               sh "rm -rf dist/*/pages/${BRANCH}/${TAG}/pages"
             }
-            echo 'mv -vf ../home/dist/* dist/'
-            sh 'mv -vf ../home/dist/* dist/'
             echo 'Stashing dist/**'
             dir('dist') {
               stash name: "html-pages", includes: "**"
