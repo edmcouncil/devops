@@ -180,6 +180,12 @@ def publish(String[] derivedProducts) {
 
 node {
   ansiColor('xterm') {
+    // If TAG_NAME="release_YYYYNN", then set BRANCH_TAG=YYYYNN
+    // see ["Public Release IRI" in "IRI Structure and Format V2.1"](https://oagiscore.atlassian.net/wiki/spaces/IOF/pages/4532142135/IRI+Structure+and+Format+V2.1#Public-Release-IRI)
+    environment {
+      BRANCH_TAG = sh(returnStdout: true, script: 'if echo "${TAG_NAME}" | grep -i -P "^release_[0-9]{6}$" >/dev/null ; then echo "${TAG_NAME: -6}" ; else echo "" ; fi').trim()
+    }
+
     stage('Setup') {
       dir("input/${env.ONTPUB_FAMILY}") {
         checkout scm
