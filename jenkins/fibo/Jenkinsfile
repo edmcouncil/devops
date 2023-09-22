@@ -241,9 +241,6 @@ node {
       dir("input/${env.ONTPUB_FAMILY}") {
         checkout scm
       }
-      dir("input/LCC") {
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'LocalBranch', localBranch: '**'],[$class: 'CheckoutOption', timeout: 1],[$class: 'AuthorInChangelog'],[$class: 'PruneStaleBranch'],[$class: 'IgnoreNotifyCommit'],[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/edmcouncil/LCC.git']]])
-      }
       stash name: "input", useDefaultExcludes: false
       deleteDir()
       dir("${workspace}@tmp") {
