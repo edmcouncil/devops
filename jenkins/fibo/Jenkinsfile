@@ -19,7 +19,6 @@ String[] derivedProducts = ['datadictionary', 'vocabulary']
 
 env.ONTPUB_FAMILY='fibo'
 env.ONTPUB_SPEC_HOST='spec.edmcouncil.org'
-env.ONTPUB_INPUT_REPOS="${env.ONTPUB_FAMILY} LCC"
 env.DEV_SPEC='AboutFIBODev.rdf'
 env.PROD_SPEC='AboutFIBOProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='edmcouncil'
