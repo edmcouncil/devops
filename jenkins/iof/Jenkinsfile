@@ -20,7 +20,6 @@ env.ONTPUB_FAMILY='iof'
 env.ONTPUB_SPEC_HOST='spec.industrialontologies.org'
 env.URI_SPACE='https://spec.industrialontologies.org/ontology/'
 env.DATADICTIONARY_COLUMNS='synonym=https://spec.industrialontologies.org/ontology/core/meta/AnnotationVocabulary/synonym|definition=http://www.w3.org/2004/02/skos/core#definition|example=http://www.w3.org/2004/02/skos/core#example|explanatoryNote=https://spec.industrialontologies.org/ontology/core/meta/AnnotationVocabulary/explanatoryNote|usageNote=https://spec.industrialontologies.org/ontology/core/meta/AnnotationVocabulary/usageNote'
-env.ONTPUB_INPUT_REPOS="${env.ONTPUB_FAMILY}"
 env.DEV_SPEC='AboutIOFDev.rdf'
 env.PROD_SPEC='AboutIOFProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='industrialontologies'

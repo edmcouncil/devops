@@ -18,7 +18,6 @@ String[] derivedProducts = []
 
 env.ONTPUB_FAMILY='auto'
 env.ONTPUB_SPEC_HOST='spec.edmcouncil.org'
-env.ONTPUB_INPUT_REPOS="${env.ONTPUB_FAMILY}"
 env.DEV_SPEC='AboutAUTODev.rdf'
 env.PROD_SPEC='AboutAUTOProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='edmcouncil'

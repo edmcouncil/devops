@@ -18,7 +18,6 @@ String[] derivedProducts = ['datadictionary', 'vocabulary']
 
 env.ONTPUB_FAMILY='idmp'
 env.ONTPUB_SPEC_HOST='spec.pistoiaalliance.org'
-env.ONTPUB_INPUT_REPOS="${env.ONTPUB_FAMILY}"
 env.DEV_SPEC='AboutIDMPDev-ReferenceIndividuals.rdf'
 env.PROD_SPEC='AboutIDMPProd-ReferenceIndividuals.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='idmp'
