@@ -70,7 +70,8 @@ node {
               echo "Performing npm ci..."
               sh "npm --no-progress --no-color ci &>html-pages.log"
               echo "Performing npm run generate for iof"
-              sh "env NODE_ENV=production ONTPUB_FAMILY=iof RESOURCES_BASE_URL=/iof/ontology/ STRAPI_URL=http://nist-jenkins:1334 STRAPI_RESOURCES_URL=/iof npm --no-progress --no-color run generate &>>html-pages.log && mv dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/iof/pages/${BRANCH}/${TAG}/_nuxt"
+              sh "env NODE_ENV=production ONTPUB_FAMILY=iof RESOURCES_BASE_URL=/iof/ontology/ STRAPI_URL=http://nist-jenkins:1334 STRAPI_RESOURCES_URL=/iof npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "if [ -d dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/iof/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               sh "rm -rf dist/*/pages/${BRANCH}/${TAG}/pages"
             }
             echo 'Stashing dist/**'
