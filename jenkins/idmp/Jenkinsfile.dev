@@ -209,7 +209,7 @@ node {
     // will be bad because we would lose all previously published versions
     //
     stage('Publish') {
-      node('edmc-master') {
+      node('build-dev') {
         // setting variables
         script {
 	  // Replace all slashes in a branch name with dashes so that we don't mess up the URLs for the ontologies
