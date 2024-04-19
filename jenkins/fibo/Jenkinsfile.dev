@@ -326,10 +326,11 @@ node {
             TAG    = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME}" | cut -d_ -f 2 ; else echo "latest" ; fi').trim()
           }
           // sending "/api/update"
+          if ("${BRANCH}/${TAG}" == "master/latest") {
           //	REQUIRES credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology"
-          withCredentials([string(credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology", variable: 'API_KEY')]) {
-            def OntologyUpdateApiURL     = "http://fibo-viewer.korora.makolab.net/${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}/api/update"
-            def OntologyUpdateApiHeaders = [[name: "X-API-Key", value: "${API_KEY}"]]
+           withCredentials([string(credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology", variable: 'API_KEY')]) {
+            def OntologyUpdateApiURL     = "https://spec.edmcouncil.org/${env.ONTPUB_FAMILY}/ontology/api/update"
+            def OntologyUpdateApiHeaders = [[name: "X-API-Key", value: "${API_KEY}"],[name: "X-Viewer-branch", value: "${BRANCH}"],[name: "X-Viewer-tag", value: "${TAG}"]]
             def response = httpRequest url: OntologyUpdateApiURL, acceptType: 'APPLICATION_JSON', customHeaders: OntologyUpdateApiHeaders, httpMode: 'PUT'
             def ret = response.getStatus()
             if (ret.equals(200)) {
@@ -347,6 +348,9 @@ node {
               ret.equals(200) && json.status != "CREATED" && json.status != "IN_PROGRESS" && json.status != "WAITING" && json.status != "INTERRUPT_IN_PROGRESS"
              }
             }
+           }
+          } else {
+           print "INFO: The DEV environment has only the \"current\", i.e. without version marking, onto-viewer instance -> skip /api/update for versions other than \"master/latest\""
           }
         }
       } // end of stage "Ontology Viewer Update"
