@@ -165,8 +165,19 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
+          if ("${config.shortStageName}" == "hygiene") {
+            def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+            def fileContent = readFile "${files[0].path}"
+            def json = new JsonSlurper().parseText(fileContent)
+            def warnTimeout = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
+            catchError(buildResult: null, stageResult: 'FAILURE') {
+              if (warnTimeout?.length()?true:false) {
+                error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${warnTimeout}'"
+              }
+            }
+          }
           if (config.archiveArtifacts == true) {
-            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log", fingerprint: true
+            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
           }
           notifyStage()
           deleteDir()
