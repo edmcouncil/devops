@@ -107,8 +107,8 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
-          if ("${config.shortStageName}" == "hygiene") {
-            def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          if (("${config.shortStageName}" == "hygiene") && (files.length > 0)) {
             def fileContent = readFile "${files[0].path}"
             def json = new JsonSlurper().parseText(fileContent)
             def warnTimeout = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
