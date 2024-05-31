@@ -117,6 +117,24 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
                 error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${warnTimeout}'"
               }
             }
+            def warnOutput = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.output
+            catchError(buildResult: null, stageResult: 'FAILURE') {
+              if ((warnOutput?.containsKey('consistent')) && !(warnOutput.consistent)) {
+                error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: is inconsistent"
+              }
+            }
+            def errorTimeout = json?.error?."${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+              if (errorTimeout?.length()?true:false) {
+                error "${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${errorTimeout}'"
+              }
+            }
+            def errorOutput = json?.error?."${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}"?.output
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+              if ((errorOutput?.containsKey('consistent')) && !(errorOutput.consistent)) {
+                error "${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}: is inconsistent"
+              }
+            }
           }
           if (config.archiveArtifacts == true) {
             archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
