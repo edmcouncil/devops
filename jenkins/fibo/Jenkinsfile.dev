@@ -173,14 +173,32 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
-          if ("${config.shortStageName}" == "hygiene") {
-            def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          if (("${config.shortStageName}" == "hygiene") && (files.length > 0)) {
             def fileContent = readFile "${files[0].path}"
             def json = new JsonSlurper().parseText(fileContent)
             def warnTimeout = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
             catchError(buildResult: null, stageResult: 'FAILURE') {
               if (warnTimeout?.length()?true:false) {
                 error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${warnTimeout}'"
+              }
+            }
+            def warnOutput = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.output
+            catchError(buildResult: null, stageResult: 'FAILURE') {
+              if ((warnOutput?.containsKey('consistent')) && !(warnOutput.consistent)) {
+                error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: is inconsistent"
+              }
+            }
+            def errorTimeout = json?.error?."${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+              if (errorTimeout?.length()?true:false) {
+                error "${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${errorTimeout}'"
+              }
+            }
+            def errorOutput = json?.error?."${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}"?.output
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+              if ((errorOutput?.containsKey('consistent')) && !(errorOutput.consistent)) {
+                error "${env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME}: is inconsistent"
               }
             }
           }
