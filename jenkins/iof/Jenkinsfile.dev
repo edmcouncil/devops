@@ -23,10 +23,9 @@ env.DATADICTIONARY_COLUMNS='synonym=https://spec.industrialontologies.org/ontolo
 env.DEV_SPEC='AboutIOFDev.rdf'
 env.PROD_SPEC='AboutIOFProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='industrialontologies'
-//	temporarily disable consistency checking
 //env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME="${env.DEV_SPEC}"
-//env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME="${env.PROD_SPEC}"
-
+env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME="${env.PROD_SPEC}"
+env.CONSISTENCY_CHECK_TIMEOUT='5m'
 env.ONTPUB_IS_DARK_MODE='1'
 env.ONTPUB_IMAGE='edmcouncil/ontology-publisher:stable'
 env.LC_ALL='en_US.UTF-8'
