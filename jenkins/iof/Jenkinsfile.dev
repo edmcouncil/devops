@@ -267,40 +267,5 @@ node {
         }
       } // end of node('nist-master')
     } // end of stage "Publish"
-      // FIBO-125
-      stage('Ontology Viewer Update') {
-        node('edmc-master') {
-          // setting variables
-          script {
-	    // Replace all slashes in a branch name with dashes so that we don't mess up the URLs for the ontologies
-	    // ... make it all lower case
-            BRANCH = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME//\\//-}" | cut -d_ -f 1 ; else echo "${BRANCH_NAME//\\//-}" ; fi').trim().toLowerCase()
-            TAG    = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME}" | cut -d_ -f 2 ; else echo "latest" ; fi').trim()
-          }
-          // sending "/api/update"
-          //	REQUIRES credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology"
-          withCredentials([string(credentialsId: "apiKey_${env.ONTPUB_SPEC_HOST}_${env.ONTPUB_FAMILY}_ontology", variable: 'API_KEY')]) {
-            def OntologyUpdateApiURL     = "https://spec.industrialontologies.org/${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}/api/update"
-            def OntologyUpdateApiHeaders = [[name: "X-API-Key", value: "${API_KEY}"]]
-            def response = httpRequest url: OntologyUpdateApiURL, acceptType: 'APPLICATION_JSON', customHeaders: OntologyUpdateApiHeaders, httpMode: 'PUT'
-            def ret = response.getStatus()
-            if (ret.equals(200)) {
-             def json = new JsonSlurper().parseText(response.content)
-             def updateId = json.id
-             echo "Start \"${OntologyUpdateApiURL}\" update (${response.status}):\n id:\t\t\t${json.id}\n status:\t\t${json.status}\n msg:\t\t\t${json.msg}\n startTimestamp:\t${json.startTimestamp}"
-             waitUntil {
-              sleep(5)
-              response = httpRequest url: "${OntologyUpdateApiURL}/${updateId}", acceptType: 'APPLICATION_JSON', customHeaders: OntologyUpdateApiHeaders
-              ret = response.getStatus()
-              if (ret.equals(200)) {
-               json = new JsonSlurper().parseText(response.content)
-               echo "id=${updateId} status=${json.status}"
-              }
-              ret.equals(200) && json.status != "CREATED" && json.status != "IN_PROGRESS" && json.status != "WAITING" && json.status != "INTERRUPT_IN_PROGRESS"
-             }
-            }
-          }
-        }
-      } // end of stage "Ontology Viewer Update"
   } // end of ansiColor('xterm')
 }
