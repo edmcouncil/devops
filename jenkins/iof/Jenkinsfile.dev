@@ -25,7 +25,7 @@ env.PROD_SPEC='AboutIOFProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='industrialontologies'
 //env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME="${env.DEV_SPEC}"
 env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME="${env.PROD_SPEC}"
-env.CONSISTENCY_CHECK_TIMEOUT='5m'
+env.CONSISTENCY_CHECK_TIMEOUT='1s'
 env.ONTPUB_IS_DARK_MODE='1'
 env.ONTPUB_IMAGE='edmcouncil/ontology-publisher:build-dev'
 env.LC_ALL='en_US.UTF-8'
@@ -217,55 +217,5 @@ node {
       }
       parallel(parallelStages)
     }
-
-    publish(derivedProducts).call()
-
-    //
-    // Run the publish on the master jenkins agent by just copying all the generated artifacts right into the workspace
-    // on master and let NGINX just serve it from there.
-    //
-    // This workspace will never be "wiped" so it contains all the older versions as well, wiping this workspace
-    // will be bad because we would lose all previously published versions
-    //
-    stage('Publish') {
-      node('nist-master') {
-        // setting variables
-        script {
-	  // Replace all slashes in a branch name with dashes so that we don't mess up the URLs for the ontologies
-	  // ... make it all lower case
-          BRANCH = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME//\\//-}" | cut -d_ -f 1 ; else echo "${BRANCH_NAME//\\//-}" ; fi').trim().toLowerCase()
-          TAG    = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME}" | cut -d_ -f 2 ; else echo "latest" ; fi').trim()
-        }
-        try {
-          echo "Unstashing the publishable-output"
-          unstash 'publishable-output'
-          echo "Delete product destination directory: \"${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}\""
-          dir("${NGINX_SPEC_ROOT}/${env.ONTPUB_FAMILY}/ontology/${BRANCH}/${TAG}") {
-            deleteDir()
-          }
-          derivedProducts.each { productName ->
-            echo "Delete product destination directory: \"${env.ONTPUB_FAMILY}/${productName}/${BRANCH}/${TAG}\""
-            dir("${NGINX_SPEC_ROOT}/${env.ONTPUB_FAMILY}/${productName}/${BRANCH}/${TAG}") {
-              deleteDir()
-            }
-          }
-          echo "untar 'publishable-output.tar.gz' to ${NGINX_SPEC_ROOT}"
-          untar file: "publishable-output.tar.gz", dir: "${NGINX_SPEC_ROOT}"
-        } catch (e) {
-          currentBuild.result = "FAILURE"
-          echo "Failed the \"${STAGE_NAME}\" stage: ${e}"
-          throw e
-        } finally {
-           echo "Build finished!"
-           deleteDir()
-           dir("${workspace}@tmp") {
-             deleteDir()
-           }
-           dir("${workspace}@script") {
-             deleteDir()
-           }
-        }
-      } // end of node('nist-master')
-    } // end of stage "Publish"
   } // end of ansiColor('xterm')
 }
