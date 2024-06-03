@@ -27,11 +27,11 @@ env.HYGIENE_TEST_PARAMETER_VALUE='industrialontologies'
 env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME="${env.PROD_SPEC}"
 env.CONSISTENCY_CHECK_TIMEOUT='5m'
 env.ONTPUB_IS_DARK_MODE='1'
-env.ONTPUB_IMAGE='edmcouncil/ontology-publisher:stable'
+env.ONTPUB_IMAGE='edmcouncil/ontology-publisher:build-dev'
 env.LC_ALL='en_US.UTF-8'
 env.LANG='en_US.UTF-8'
 env.LANGUAGE='en_US.UTF-8'
-env.NGINX_SPEC_ROOT="/opt/${env.ONTPUB_SPEC_HOST}"
+env.NGINX_SPEC_ROOT="/opt/dev.${env.ONTPUB_SPEC_HOST}"
 
 properties([
   buildDiscarder(
