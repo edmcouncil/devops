@@ -110,14 +110,30 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
-          if ("${config.shortStageName}" == "hygiene") {
-            def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          if (("${config.shortStageName}" == "hygiene") && (files.length > 0)) {
             def fileContent = readFile "${files[0].path}"
             def json = new JsonSlurper().parseText(fileContent)
-            def warnTimeout = json?.warning?."${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}"?.timeout
-            catchError(buildResult: null, stageResult: 'FAILURE') {
-              if (warnTimeout?.length()?true:false) {
-                error "${env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME}: timeout after '${warnTimeout}'"
+            for (spec_file in json?.warning?.keySet()) {
+              def stat = json.warning."${spec_file}"
+              catchError(buildResult: null, stageResult: 'FAILURE') {
+                if (stat.containsKey('error')) {
+                  error "${spec_file}: error '${stat.'error'}'"
+                } else if (stat.containsKey('timeout')) {
+                  error "${spec_file}: timeout after '${stat.'timeout'}'"
+                } else if ((stat.containsKey('output')) && (stat.'output'.containsKey('consistent')) && !(stat.'output'.'consistent')) {
+                  error "${spec_file}: is inconsistent"
+                }
+              }
+            }
+            for (spec_file in json?.error?.keySet()) {
+              def stat = json.error."${spec_file}"
+              if (stat.containsKey('error')) {
+                error "${spec_file}: error '${stat.'error'}'"
+              } else if (stat.containsKey('timeout')) {
+                error "${spec_file}: timeout after '${stat.'timeout'}'"
+              } else if ((stat.containsKey('output')) && (stat.'output'.containsKey('consistent')) && !(stat.'output'.'consistent')) {
+                error "${spec_file}: is inconsistent"
               }
             }
           }
