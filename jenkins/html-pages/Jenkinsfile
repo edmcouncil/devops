@@ -60,7 +60,7 @@ node {
           TAG    = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME}" | cut -d_ -f 2 ; else echo "latest" ; fi').trim()
         }
         try {
-          echo "Branch is ${env.BRANCH_NAME}..."
+          echo "Branch is ${env.BRANCH}..."
           echo "Node is ${JOB_NAME.substring(0,JOB_NAME.lastIndexOf('/'))}-build"
           checkout scm
           dir("home") {
@@ -70,7 +70,7 @@ node {
               echo "Performing npm ci..."
               sh "npm --no-progress --no-color ci &>html-pages.log"
               echo "Performing npm build..."
-              sh "env DISABLE_ESLINT_PLUGIN=true PRODUCT=htmlpages npm --no-progress --no-color run build &>>html-pages.log"
+              sh "env DISABLE_ESLINT_PLUGIN=true PRODUCT=htmlpages BRANCH=${BRANCH} TAG=${TAG} npm --no-progress --no-color run build &>>html-pages.log"
               sh "mv -f env.log html-pages.log ../general/"
             }
            } catch (e) {
@@ -87,16 +87,16 @@ node {
               echo "Performing npm ci..."
               sh "npm --no-progress --no-color ci &>>html-pages.log"
               echo "Performing npm run generate for fibo"
-              sh "env NODE_ENV=production PRODUCT=pages ONTPUB_FAMILY=fibo RESOURCES_BASE_URL=/fibo/ontology/ STRAPI_URL=${BASE_URL}/fibo/strapi/ STRAPI_RESOURCES_URL=/fibo npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=fibo RESOURCES_BASE_URL=/fibo/ontology/ STRAPI_URL=${BASE_URL}/fibo/strapi/ STRAPI_RESOURCES_URL=/fibo npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/fibo/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/fibo/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/fibo/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               echo "Performing npm run generate for auto"
-              sh "env NODE_ENV=production PRODUCT=pages ONTPUB_FAMILY=auto RESOURCES_BASE_URL=/auto/ontology/ STRAPI_URL=${BASE_URL}/auto/strapi/ STRAPI_RESOURCES_URL=/auto npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=auto RESOURCES_BASE_URL=/auto/ontology/ STRAPI_URL=${BASE_URL}/auto/strapi/ STRAPI_RESOURCES_URL=/auto npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/auto/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/auto/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/auto/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               echo "Performing npm run generate for idmp"
-              sh "env NODE_ENV=production PRODUCT=pages ONTPUB_FAMILY=idmp BASE_URL=https://spec.pistoiaalliance.org/ RESOURCES_BASE_URL=/idmp/ontology/ STRAPI_URL=${BASE_URL}/idmp/strapi/ STRAPI_RESOURCES_URL=/idmp npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=idmp BASE_URL=https://spec.pistoiaalliance.org/ RESOURCES_BASE_URL=/idmp/ontology/ STRAPI_URL=${BASE_URL}/idmp/strapi/ STRAPI_RESOURCES_URL=/idmp npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/idmp/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/idmp/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/idmp/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               echo "Performing npm run generate for esg"
-              sh "env NODE_ENV=production PRODUCT=pages ONTPUB_FAMILY=esg RESOURCES_BASE_URL=/esg/ontology/ STRAPI_URL=${BASE_URL}/esg/strapi/ STRAPI_RESOURCES_URL=/esg npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=esg RESOURCES_BASE_URL=/esg/ontology/ STRAPI_URL=${BASE_URL}/esg/strapi/ STRAPI_RESOURCES_URL=/esg npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/esg/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/esg/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/esg/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               sh "rm -rf dist/*/pages/${BRANCH}/${TAG}/pages"
             }

@@ -59,7 +59,7 @@ node {
           TAG    = sh(returnStdout: true, script: 'if [ -n "${TAG_NAME}" ] ; then echo "${TAG_NAME}" | cut -d_ -f 2 ; else echo "latest" ; fi').trim()
         }
         try {
-          echo "Branch is ${env.BRANCH_NAME}..."
+          echo "Branch is ${env.BRANCH}..."
           echo "Node is ${JOB_NAME.substring(0,JOB_NAME.lastIndexOf('/'))}-build"
           checkout scm
           sh "rm -f env.log html-pages.log"
@@ -70,7 +70,7 @@ node {
               echo "Performing npm ci..."
               sh "npm --no-progress --no-color ci &>html-pages.log"
               echo "Performing npm run generate for iof"
-              sh "env NODE_ENV=production ONTPUB_FAMILY=iof RESOURCES_BASE_URL=/iof/ontology/ STRAPI_URL=${BASE_URL}/iof/strapi/ STRAPI_RESOURCES_URL=/iof npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=iof RESOURCES_BASE_URL=/iof/ontology/ STRAPI_URL=${BASE_URL}/iof/strapi/ STRAPI_RESOURCES_URL=/iof npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/iof/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/iof/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               sh "rm -rf dist/*/pages/${BRANCH}/${TAG}/pages"
             }
