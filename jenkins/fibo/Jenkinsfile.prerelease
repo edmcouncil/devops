@@ -258,8 +258,5 @@ node {
       }
       parallel(parallelStages)
     }
-
-    publish(derivedProducts).call()
-
   } // end of ansiColor('xterm')
 }
