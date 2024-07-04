@@ -54,63 +54,6 @@ properties([
 //  ansiColor('xterm')
 ])
 
-@Field private mainSlackMessageObject = null
-
-def init() {
-  echo "Initialising slack functions"
-
-  mainSlackMessageObject = slackSend(
-    color: "good",
-    message: "Started build <${env.BUILD_URL}|Build #${env.BUILD_NUMBER}> on branch ${env.JOB_NAME}",
-    botUser: false,
-    baseUrl: null,
-    teamDomain: 'fibo-edmc'
-  )
-
-  if (mainSlackMessageObject == null) {
-    echo "ERROR: Could not initialise slack connection"
-  } else {
-    println ("mainSlackMessageObject: " + mainSlackMessageObject.dump())
-  }
-}
-
-def send(String color, String message) {
-
-  if (mainSlackMessageObject == null) {
-    init()
-    if (mainSlackMessageObject == null) {
-      slackSend color: color, message: "${message} (no main message)"
-      return
-    }
-  }
-
-  slackSend color: color, message: message, channel: mainSlackMessageObject.threadId, botUser: true
-}
-
-def notifyStage() {
-
-  String buildResult = currentBuild.currentResult
-
-  def message="Stage \"${STAGE_NAME}\" finished with status ${buildResult} in <${env.BUILD_URL}|Build #${env.BUILD_NUMBER}> on branch ${env.JOB_NAME}"
-
-  if (buildResult == "SUCCESS") {
-    echo "${message}"
-    send("good", message)
-  }
-  else if (buildResult == "FAILURE") {
-    echo "ERROR: ${message}"
-    send("danger", message)
-  }
-  else if (buildResult == "UNSTABLE") {
-    echo "WARNING: ${message}"
-    send("warning", message)
-  }
-  else {
-    echo "ERROR: ${message}"
-    send("danger", message)
-  }
-}
-
 //
 // Return a stage object that will get executed in the appropriate ontology-publisher container
 //
@@ -165,10 +108,20 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
+          def json = null
           def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
-          if (("${config.shortStageName}" == "hygiene") && (files.length > 0)) {
+          if (files.length > 0) {
             def fileContent = readFile "${files[0].path}"
-            def json = new JsonSlurper().parseText(fileContent)
+            json = new JsonSlurper().parseText(fileContent)
+          }
+          if (config.archiveArtifacts == true) {
+            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
+          }
+          deleteDir()
+          dir("${workspace}@tmp") {
+            deleteDir()
+          }
+          if ("${config.shortStageName}" == "hygiene") {
             for (spec_file in json?.warning?.keySet()) {
               def stat = json.warning."${spec_file}"
               catchError(buildResult: null, stageResult: 'FAILURE') {
@@ -191,14 +144,6 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
                 error "${spec_file}: is inconsistent"
               }
             }
-          }
-          if (config.archiveArtifacts == true) {
-            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
-          }
-          notifyStage()
-          deleteDir()
-          dir("${workspace}@tmp") {
-            deleteDir()
           }
         }
       }
