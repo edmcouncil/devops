@@ -107,10 +107,20 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
           throw e
         } finally {
           echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
+          def json = null
           def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
-          if (("${config.shortStageName}" == "hygiene") && (files.length > 0)) {
+          if (files.length > 0) {
             def fileContent = readFile "${files[0].path}"
-            def json = new JsonSlurper().parseText(fileContent)
+            json = new JsonSlurper().parseText(fileContent)
+          }
+          if (config.archiveArtifacts == true) {
+            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
+          }
+          deleteDir()
+          dir("${workspace}@tmp") {
+            deleteDir()
+          }
+          if ("${config.shortStageName}" == "hygiene") {
             for (spec_file in json?.warning?.keySet()) {
               def stat = json.warning."${spec_file}"
               catchError(buildResult: null, stageResult: 'FAILURE') {
@@ -133,13 +143,6 @@ def runInOntologyPublisherContainer(Map config, Closure body) {
                 error "${spec_file}: is inconsistent"
               }
             }
-          }
-          if (config.archiveArtifacts == true) {
-            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
-          }
-          deleteDir()
-          dir("${workspace}@tmp") {
-            deleteDir()
           }
         }
       }
