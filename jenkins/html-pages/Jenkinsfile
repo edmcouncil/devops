@@ -120,7 +120,6 @@ node {
           dir("${workspace}@tmp") {
             deleteDir()
           }
-          // slackScript.notifyStage()
         }
       } // end of node('master')
     } // end of stage "Publish"
@@ -154,7 +153,6 @@ node {
           dir("${workspace}@script") {
             deleteDir()
           }
-          // slackScript.notifyStage()
         }
       } // end of node('master')
     } // end of stage "Publish"
