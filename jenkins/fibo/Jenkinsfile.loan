@@ -160,4 +160,3 @@ node {
 
     }
   } // end of ansiColor('xterm')
-}
