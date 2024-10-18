@@ -1,0 +1,163 @@
+#!/usr/bin/env groovy
+//
+// The main Jenkinsfile for FIBO, defining the Build/Publish/Test/Deploy process that is
+// executed for each push into the repository.
+//
+// Note that this file is in the so called "Declarative Pipeline" syntax
+//
+// See https://jenkins.io/doc/book/pipeline/jenkinsfile/
+//
+// Required plugins:
+// - [Pipeline: SCM Step](https://plugins.jenkins.io/workflow-scm-step/) = workflow-scm-step
+// - [Pipeline Utility Steps](https://plugins.jenkins.io/pipeline-utility-steps/) = pipeline-utility-steps
+
+import groovy.json.JsonSlurper
+import groovy.transform.Field
+
+
+env.ONTPUB_FAMILY='fibo-loan'
+env.ONTPUB_SPEC_HOST='spec.edmcouncil.org'
+env.DEV_SPEC='/LOAN/AllLOAN.rdf'
+env.HYGIENE_TEST_PARAMETER_VALUE='edmcouncil'
+env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME="${env.DEV_SPEC}"
+
+env.CONSISTENCY_CHECK_TIMEOUT='2h'
+env.ONTPUB_IS_DARK_MODE='1'
+env.ONTPUB_IMAGE='edmcouncil/ontology-publisher:stable'
+env.LC_ALL='en_US.UTF-8'
+env.LANG='en_US.UTF-8'
+env.LANGUAGE='en_US.UTF-8'
+
+properties([
+  buildDiscarder(
+          logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '30')
+  ),
+  ])
+
+
+def runInOntologyPublisherContainer(Map config, Closure body) {
+
+  assert config.shortStageName != null
+  assert config.longStageName != null
+  assert body != null
+
+  return {
+    stage(config.longStageName) {
+
+      echo "runInOntologyPublisherContainer shortStageName:${config.shortStageName}, longStageName:${config.longStageName}"
+
+      def containerName = "${env.JOB_NAME}-${env.NODE_NAME}-${env.EXECUTOR_NUMBER}-${config.shortStageName}".replaceAll(/[^a-zA-Z0-9_.-]/, "_")
+
+      node('docker') {
+        echo "Running in stage \"${config.longStageName}\" now"
+        sh "rm -rf input"
+        unstash "input"
+        sh "ls -ld input/*/*"
+        sh "rm -rf output"
+        if (config.unstashOutputDirs) {
+          config.unstashOutputDirs.each { outputDir ->
+            unstash "output-${outputDir}"
+          }
+        }
+        if (("${config.shortStageName}" != "ontology") && ("${config.shortStageName}" != "hygiene")) {
+          unstash "output-ontology"
+        }
+        sh "install -d output tmp"
+        echo "Launching docker container ${containerName}:"
+        try {
+          def dockerImage = docker.image(env.ONTPUB_IMAGE)
+          dockerImage.pull()
+          dockerImage.inside("""
+            --read-only
+            --name ${containerName}
+            --mount type=bind,source=${env.WORKSPACE}/input,target=/input,readonly,consistency=cached
+            --mount type=bind,source=${env.WORKSPACE}/output,target=/output,consistency=delegated
+            --mount type=bind,source=${env.WORKSPACE}/tmp,target=/var/tmp,consistency=delegated
+          """) {
+            echo "Running in docker container ${containerName}"
+            //
+            // Now execute whatever you had in the closure
+            //
+            body()
+          }
+        } catch (e) {
+          currentBuild.result = "FAILURE"
+          echo "Failed stage \"${config.longStageName}\": ${e}"
+          throw e
+        } finally {
+          echo "Finished stage \"${config.longStageName}\" in docker container ${containerName}"
+          def json = null
+          def files = findFiles(glob: "output/${env.ONTPUB_FAMILY}/**/consistency-check.json")
+          if (files.length > 0) {
+            def fileContent = readFile "${files[0].path}"
+            json = new JsonSlurper().parseText(fileContent)
+          }
+          if (config.archiveArtifacts == true) {
+            archiveArtifacts artifacts: "output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/*.log,output/${env.ONTPUB_FAMILY}/${config.shortStageName}/**/consistency-check.json", fingerprint: true
+          }
+          deleteDir()
+          dir("${workspace}@tmp") {
+            deleteDir()
+          }
+          if ("${config.shortStageName}" == "hygiene") {
+            for (spec_file in json?.warning?.keySet()) {
+              def stat = json.warning."${spec_file}"
+              catchError(buildResult: null, stageResult: 'FAILURE') {
+                if (stat.containsKey('error')) {
+                  error "${spec_file}: error '${stat.'error'}'"
+                } else if (stat.containsKey('timeout')) {
+                  error "${spec_file}: timeout after '${stat.'timeout'}'"
+                } else if ((stat.containsKey('output')) && (stat.'output'.containsKey('consistent')) && !(stat.'output'.'consistent')) {
+                  error "${spec_file}: is inconsistent"
+                }
+              }
+            }
+            for (spec_file in json?.error?.keySet()) {
+              def stat = json.error."${spec_file}"
+              if (stat.containsKey('error')) {
+                error "${spec_file}: error '${stat.'error'}'"
+              } else if (stat.containsKey('timeout')) {
+                error "${spec_file}: timeout after '${stat.'timeout'}'"
+              } else if ((stat.containsKey('output')) && (stat.'output'.containsKey('consistent')) && !(stat.'output'.'consistent')) {
+                error "${spec_file}: is inconsistent"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+//
+// Return the stage object that runs the hygiene tests
+//
+def hygiene() {
+
+  return runInOntologyPublisherContainer(
+    shortStageName: 'hygiene',
+    longStageName: 'Hygiene Tests',
+    archiveArtifacts: true
+  ) {
+    sh "/publisher/publish.sh hygiene"
+    stash name: "output-hygiene", includes: "output/${env.ONTPUB_FAMILY}/hygiene/**", excludes: "output/${env.ONTPUB_FAMILY}/hygiene/**/*.log"
+  }
+}
+
+node {
+  ansiColor('xterm') {
+    stage('Setup') {
+      dir("input/${env.ONTPUB_FAMILY}") {
+        checkout scm
+      }
+      stash name: "input", useDefaultExcludes: false
+      deleteDir()
+      dir("${workspace}@tmp") {
+        deleteDir()
+      }
+    }
+
+    hygiene().call()
+
+    }
+  } // end of ansiColor('xterm')
+}
