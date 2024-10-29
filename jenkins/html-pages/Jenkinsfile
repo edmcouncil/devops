@@ -98,6 +98,9 @@ node {
               echo "Performing npm run generate for esg"
               sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=esg RESOURCES_BASE_URL=/esg/ontology/ STRAPI_URL=${BASE_URL}/esg/strapi/ STRAPI_RESOURCES_URL=/esg npm --no-progress --no-color run generate &>>html-pages.log"
               sh "if [ -d dist/esg/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/esg/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/esg/pages/${BRANCH}/${TAG}/_nuxt ; fi"
+              echo "Performing npm run generate for fet"
+              sh "env NODE_ENV=production PRODUCT=pages BRANCH=${BRANCH} TAG=${TAG} ONTPUB_FAMILY=fet RESOURCES_BASE_URL=/fet/ontology/ STRAPI_URL=${BASE_URL}/fet/strapi/ STRAPI_RESOURCES_URL=/fet npm --no-progress --no-color run generate &>>html-pages.log"
+              sh "if [ -d dist/fet/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt ] ; then mv dist/fet/pages/${BRANCH}/${TAG}/pages/${BRANCH}/${TAG}/_nuxt dist/fet/pages/${BRANCH}/${TAG}/_nuxt ; fi"
               sh "rm -rf dist/*/pages/${BRANCH}/${TAG}/pages"
             }
             echo 'mv -vf ../home/dist/htmlpages dist/'
