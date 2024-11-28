@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 //
-// The main Jenkinsfile for FET, defining the Build/Publish/Test/Deploy process that is
+// The main Jenkinsfile for FTX, defining the Build/Publish/Test/Deploy process that is
 // executed for each push into the repository.
 //
 // Note that this file is in the so called "Declarative Pipeline" syntax
@@ -17,10 +17,10 @@ import groovy.transform.Field
 //String[] derivedProducts = ['datadictionary', 'index', 'vocabulary']
 String[] derivedProducts = ['datadictionary', 'vocabulary']
 
-env.ONTPUB_FAMILY='fet'
+env.ONTPUB_FAMILY='ftx'
 env.ONTPUB_SPEC_HOST='spec.edmcouncil.org'
-env.DEV_SPEC='AboutFETDev.rdf'
-env.PROD_SPEC='AboutFETProd.rdf'
+env.DEV_SPEC='AboutFTXDev.rdf'
+env.PROD_SPEC='AboutFTXProd.rdf'
 env.HYGIENE_TEST_PARAMETER_VALUE='edmcouncil'
 //env.HYGIENE_WARN_INCONSISTENCY_SPEC_FILE_NAME="${env.DEV_SPEC}"
 //env.HYGIENE_ERROR_INCONSISTENCY_SPEC_FILE_NAME="${env.PROD_SPEC}"
